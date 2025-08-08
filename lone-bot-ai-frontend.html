@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lone Bot AI</title>
+  <style>
+    /* Reset and base styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f6f8fa;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+      margin: 40px auto 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 32px 24px 24px 24px;
+      position: relative;
+    }
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 18px;
+      font-weight: 600;
+    }
+    h1 { font-size: 2.1rem; }
+    h2 { font-size: 1.3rem; }
+    .section { display: none; }
+    .section.active { display: block; }
+    label { display: block; margin-bottom: 6px; font-weight: 500; }
+    input[type="text"], input[type="password"], input[type="email"], input[type="file"], textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+      background: #f9fafb;
+      transition: border 0.2s;
+    }
+    input[type="file"] { padding: 6px; }
+    textarea { min-height: 60px; resize: vertical; }
+    button, .btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.2s;
+      display: inline-block;
+    }
+    button:disabled, .btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+    button:hover:not(:disabled), .btn:hover:not(:disabled) { background: #1d4ed8; }
+    .link-btn {
+      background: none;
+      color: #2563eb;
+      border: none;
+      padding: 0;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: underline;
+      margin: 0 4px;
+    }
+    .error {
+      color: #dc2626;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      font-size: 0.98rem;
+      text-align: center;
+    }
+    .success {
+      color: #166534;
+      background: #bbf7d0;
+      border: 1px solid #86efac;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      font-size: 0.98rem;
+      text-align: center;
+    }
+    .loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.7);
+      z-index: 1000;
+      transition: opacity 0.2s;
+    }
+    .loader-inner {
+      width: 54px;
+      height: 54px;
+      border: 6px solid #dbeafe;
+      border-top: 6px solid #2563eb;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .chat-bubble {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 1.04rem;
+      word-break: break-word;
+    }
+    .chat-bubble.user { background: #dbeafe; text-align: right; }
+    .chat-bubble.ai { background: #fef9c3; text-align: left; }
+    .chat-meta {
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-bottom: 2px;
+      text-align: left;
+    }
+    .history-list {
+      margin-top: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .history-item {
+      background: #f3f4f6;
+      border-radius: 7px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      border-left: 4px solid #2563eb;
+    }
+    .history-q { font-weight: 500; }
+    .history-a { margin-top: 4px; }
+    .history-meta {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .doc-list {
+      margin: 8px 0 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .doc-list li {
+      font-size: 0.97rem;
+      color: #334155;
+      margin-bottom: 2px;
+    }
+    .topbar {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin: 0 auto 0 auto;
+      padding: 10px 0 0 0;
+    }
+    .topbar .btn-logout {
+      background: #f87171;
+      color: #fff;
+      font-size: 0.98rem;
+      padding: 7px 14px;
+      border-radius: 5px;
+      margin-left: 8px;
+    }
+    .topbar .btn-logout:hover { background: #dc2626; }
+    @media (max-width: 600px) {
+      .container, .topbar { max-width: 98vw; padding: 18px 4vw 18px 4vw; }
+      h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar" id="topbar" style="display:none;">
+    <button class="btn btn-logout" id="logoutBtn">Logout</button>
+  </div>
+  <div class="container">
+    <!-- Landing Section -->
+    <section class="section" id="landingSection">
+      <h1>Lone Bot AI</h1>
+      <p style="text-align:center; margin-bottom: 24px; color:#475569;">AI-powered chat & document Q&A.<br>Get started below.</p>
+      <button class="btn" id="toLoginBtn">Login</button>
+      <button class="btn" id="toRegisterBtn" style="margin-left:10px;">Register</button>
+    </section>
+    <!-- Register Section -->
+    <section class="section" id="registerSection">
+      <h2>Register</h2>
+      <form id="registerForm">
+        <div id="registerError" class="error" style="display:none;"></div>
+        <label for="registerEmail">Email</label>
+        <input type="email" id="registerEmail" required autocomplete="username">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" required autocomplete="new-password">
+        <button class="btn" type="submit">Register</button>
+      </form>
+      <p style="text-align:center; margin-top:12px;">Already have an account? <button class="link-btn" id="registerToLoginBtn">Login</button></p>
+    </section>
+    <!-- Login Section -->
+    <section class="section" id="loginSection">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <div id="loginError" class="error" style="display:none;"></div>
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required autocomplete="username">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password">
+        <button class="btn" type="submit">Login</button>
+      </form>
+      <p style="text-align:center; margin-top:12px;">No account? <button class="link-btn" id="loginToRegisterBtn">Register</button></p>
+    </section>
+    <!-- Upload Section -->
+    <section class="section" id="uploadSection">
+      <h2>Upload Documents</h2>
+      <form id="uploadForm" enctype="multipart/form-data">
+        <div id="uploadError" class="error" style="display:none;"></div>
+        <div id="uploadSuccess" class="success" style="display:none;"></div>
+        <label for="documents">Select PDF, DOCX, or TXT files</label>
+        <input type="file" id="documents" name="documents" multiple accept=".pdf,.docx,.txt" required>
+        <button class="btn" type="submit">Upload</button>
+      </form>
+      <button class="btn" id="toChatBtn" style="margin-top:18px; width:100%;">Go to Chat</button>
+    </section>
+    <!-- Chat Section -->
+    <section class="section" id="chatSection">
+      <h2>Ask Questions</h2>
+      <form id="askForm">
+        <div id="askError" class="error" style="display:none;"></div>
+        <label for="question">Your Question</label>
+        <textarea id="question" required placeholder="Ask something about your uploaded documents..."></textarea>
+        <label for="docSelect">Select Documents</label>
+        <select id="docSelect" multiple required style="min-height:60px;"></select>
+        <button class="btn" type="submit">Ask AI</button>
+      </form>
+      <div id="chatArea" style="margin-top:22px;"></div>
+      <button class="btn" id="toHistoryBtn" style="margin-top:18px; width:100%;">View History</button>
+    </section>
+    <!-- History Section -->
+    <section class="section" id="historySection">
+      <h2>Chat History</h2>
+      <div id="historyList" class="history-list"></div>
+      <button class="btn" id="backToChatBtn" style="margin-top:18px; width:100%;">Back to Chat</button>
+    </section>
+  </div>
+  <!-- Loader -->
+  <div class="loader" id="loader" style="display:none;">
+    <div class="loader-inner"></div>
+  </div>
+  <script>
+    // =====================
+    // CONFIGURATION
+    // =====================
+    const API_BASE = '';
+    // If backend is on a different host/port, set API_BASE = 'http://localhost:3000' (or your backend URL)
+
+    // =====================
+    // SECTION MANAGEMENT
+    // =====================
+    const sections = {
+      landing: document.getElementById('landingSection'),
+      register: document.getElementById('registerSection'),
+      login: document.getElementById('loginSection'),
+      upload: document.getElementById('uploadSection'),
+      chat: document.getElementById('chatSection'),
+      history: document.getElementById('historySection'),
+    };
+    const topbar = document.getElementById('topbar');
+    function showSection(name) {
+      Object.values(sections).forEach(sec => sec.classList.remove('active'));
+      if (sections[name]) sections[name].classList.add('active');
+      // Show/hide topbar for authenticated sections
+      if (["upload","chat","history"].includes(name)) {
+        topbar.style.display = '';
+      } else {
+        topbar.style.display = 'none';
+      }
+    }
+
+    // =====================
+    // LOADER MANAGEMENT
+    // =====================
+    const loader = document.getElementById('loader');
+    function showLoader() { loader.style.display = 'flex'; }
+    function hideLoader() { loader.style.display = 'none'; }
+
+    // =====================
+    // AUTH MANAGEMENT
+    // =====================
+    function saveToken(token) { localStorage.setItem('jwt', token); }
+    function getToken() { return localStorage.getItem('jwt'); }
+    function clearToken() { localStorage.removeItem('jwt'); }
+    function isAuthenticated() { return !!getToken(); }
+
+    // =====================
+    // API HELPERS
+    // =====================
+    async function apiFetch(path, opts = {}, isFile = false) {
+      const headers = opts.headers || {};
+      if (isAuthenticated()) {
+        headers['Authorization'] = 'Bearer ' + getToken();
+      }
+      if (!isFile && !(opts.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
+      try {
+        showLoader();
+        const res = await fetch(API_BASE + path, {
+          ...opts,
+          headers,
+        });
+        hideLoader();
+        if (!res.ok) {
+          let errMsg = 'Unknown error';
+          try {
+            const data = await res.json();
+            errMsg = data.error || data.message || JSON.stringify(data);
+          } catch { errMsg = res.statusText; }
+          throw new Error(errMsg);
+        }
+        // If expecting JSON, parse it
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('application/json')) {
+          return await res.json();
+        }
+        return await res.text();
+      } catch (err) {
+        hideLoader();
+        throw err;
+      }
+    }
+
+    // =====================
+    // LANDING PAGE EVENTS
+    // =====================
+    document.getElementById('toLoginBtn').onclick = () => showSection('login');
+    document.getElementById('toRegisterBtn').onclick = () => showSection('register');
+
+    // =====================
+    // REGISTER EVENTS
+    // =====================
+    document.getElementById('registerToLoginBtn').onclick = () => showSection('login');
+    document.getElementById('registerForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      const errorDiv = document.getElementById('registerError');
+      errorDiv.style.display = 'none';
+      if (!email || !password) {
+        errorDiv.textContent = 'Email and password required.';
+        errorDiv.style.display = '';
+        return;
+      }
+      try {
+        await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+        // Auto-login after register
+        const loginRes = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+        saveToken(loginRes.token);
+        await loadDocuments();
+        showSection('upload');
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.style.display = '';
+      }
+    };
+
+    // =====================
+    // LOGIN EVENTS
+    // =====================
+    document.getElementById('loginToRegisterBtn').onclick = () => showSection('register');
+    document.getElementById('loginForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const errorDiv = document.getElementById('loginError');
+      errorDiv.style.display = 'none';
+      if (!email || !password) {
+        errorDiv.textContent = 'Email and password required.';
+        errorDiv.style.display = '';
+        return;
+      }
+      try {
+        const res = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+        saveToken(res.token);
+        await loadDocuments();
+        showSection('upload');
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.style.display = '';
+      }
+    };
+
+    // =====================
+    // LOGOUT
+    // =====================
+    document.getElementById('logoutBtn').onclick = () => {
+      clearToken();
+      showSection('landing');
+    };
+
+    // =====================
+    // UPLOAD EVENTS
+    // =====================
+    document.getElementById('toChatBtn').onclick = async () => {
+      await loadDocuments();
+      showSection('chat');
+    };
+    document.getElementById('uploadForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const input = document.getElementById('documents');
+      const files = input.files;
+      const errorDiv = document.getElementById('uploadError');
+      const successDiv = document.getElementById('uploadSuccess');
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+      if (!files.length) {
+        errorDiv.textContent = 'Please select at least one file.';
+        errorDiv.style.display = '';
+        return;
+      }
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('documents', files[i]);
+      }
+      try {
+        await apiFetch('/upload', {
+          method: 'POST',
+          body: formData
+        }, true);
+        successDiv.textContent = 'Upload successful!';
+        successDiv.style.display = '';
+        input.value = '';
+        await loadDocuments();
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.style.display = '';
+      }
+    };
+
+    // =====================
+    // DOCUMENTS MANAGEMENT
+    // =====================
+    let userDocuments = [];
+    async function loadDocuments() {
+      // No dedicated endpoint for listing docs, so fetch from history and extract unique docs
+      try {
+        const history = await apiFetch('/upload/history');
+        const docMap = {};
+        history.forEach(item => {
+          (item.documents || []).forEach(doc => {
+            docMap[doc.id] = doc;
+          });
+        });
+        userDocuments = Object.values(docMap);
+        renderDocSelect();
+      } catch (err) {
+        userDocuments = [];
+        renderDocSelect();
+      }
+    }
+    function renderDocSelect() {
+      const select = document.getElementById('docSelect');
+      select.innerHTML = '';
+      if (!userDocuments.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No documents uploaded yet';
+        select.appendChild(opt);
+        select.disabled = true;
+      } else {
+        userDocuments.forEach(doc => {
+          const opt = document.createElement('option');
+          opt.value = doc.id;
+          opt.textContent = doc.name || doc.filename || ('Document #' + doc.id);
+          select.appendChild(opt);
+        });
+        select.disabled = false;
+      }
+    }
+
+    // =====================
+    // CHAT EVENTS
+    // =====================
+    document.getElementById('toHistoryBtn').onclick = async () => {
+      await loadHistory();
+      showSection('history');
+    };
+    document.getElementById('backToChatBtn').onclick = () => {
+      showSection('chat');
+    };
+    document.getElementById('askForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const question = document.getElementById('question').value.trim();
+      const docSelect = document.getElementById('docSelect');
+      const errorDiv = document.getElementById('askError');
+      errorDiv.style.display = 'none';
+      if (!question) {
+        errorDiv.textContent = 'Please enter a question.';
+        errorDiv.style.display = '';
+        return;
+      }
+      const selectedDocs = Array.from(docSelect.selectedOptions).map(opt => opt.value).filter(Boolean);
+      if (!selectedDocs.length) {
+        errorDiv.textContent = 'Please select at least one document.';
+        errorDiv.style.display = '';
+        return;
+      }
+      try {
+        // Show user question in chat area
+        appendChatBubble('user', question);
+        const res = await apiFetch('/upload/ask', {
+          method: 'POST',
+          body: JSON.stringify({ question, documentIds: selectedDocs })
+        });
+        appendChatBubble('ai', res.answer || res.response || JSON.stringify(res));
+        document.getElementById('question').value = '';
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.style.display = '';
+      }
+    };
+    function appendChatBubble(role, text) {
+      const chatArea = document.getElementById('chatArea');
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble ' + role;
+      bubble.textContent = text;
+      chatArea.appendChild(bubble);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    // =====================
+    // HISTORY EVENTS
+    // =====================
+    async function loadHistory() {
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '';
+      try {
+        const history = await apiFetch('/upload/history');
+        if (!Array.isArray(history) || !history.length) {
+          historyList.innerHTML = '<div style="text-align:center; color:#64748b;">No chat history yet.</div>';
+          return;
+        }
+        history.reverse().forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'history-item';
+          const q = document.createElement('div');
+          q.className = 'history-q';
+          q.textContent = 'Q: ' + (item.question || '');
+          const a = document.createElement('div');
+          a.className = 'history-a';
+          a.textContent = 'A: ' + (item.answer || item.response || '');
+          const meta = document.createElement('div');
+          meta.className = 'history-meta';
+          const ts = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
+          let docNames = '';
+          if (item.documents && item.documents.length) {
+            docNames = 'Docs: ' + item.documents.map(d => d.name || d.filename || ('#'+d.id)).join(', ');
+          }
+          meta.textContent = [ts, docNames].filter(Boolean).join(' | ');
+          div.appendChild(q);
+          div.appendChild(a);
+          div.appendChild(meta);
+          historyList.appendChild(div);
+        });
+      } catch (err) {
+        historyList.innerHTML = '<div class="error">Failed to load history: ' + err.message + '</div>';
+      }
+    }
+
+    // =====================
+    // INITIALIZATION & ROUTING
+    // =====================
+    async function init() {
+      // If authenticated, go to upload section
+      if (isAuthenticated()) {
+        try {
+          await loadDocuments();
+          showSection('upload');
+        } catch {
+          clearToken();
+          showSection('login');
+        }
+      } else {
+        showSection('landing');
+      }
+    }
+    // Protect upload/chat/history sections
+    function protectSection(sectionName) {
+      if (!isAuthenticated()) {
+        showSection('login');
+        return false;
+      }
+      return true;
+    }
+    // Intercept navigation to protected sections
+    ["upload","chat","history"].forEach(name => {
+      const sec = sections[name];
+      if (sec) {
+        sec.addEventListener('show', () => {
+          if (!protectSection(name)) return;
+        });
+      }
+    });
+    // Hide loader on page load
+    hideLoader();
+    // Start app
+    window.onload = init;
+  </script>
+</body>
+</html>
