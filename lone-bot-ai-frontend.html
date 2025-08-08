@@ -200,7 +200,7 @@
     <!-- Register Section -->
     <section class="section" id="registerSection">
       <h2>Register</h2>
-      <form id="registerForm">
+      <form id="registerForm" autocomplete="off">
         <div id="registerError" class="error" style="display:none;"></div>
         <label for="registerEmail">Email</label>
         <input type="email" id="registerEmail" required autocomplete="username">
@@ -213,7 +213,7 @@
     <!-- Login Section -->
     <section class="section" id="loginSection">
       <h2>Login</h2>
-      <form id="loginForm">
+      <form id="loginForm" autocomplete="off">
         <div id="loginError" class="error" style="display:none;"></div>
         <label for="loginEmail">Email</label>
         <input type="email" id="loginEmail" required autocomplete="username">
@@ -354,6 +354,7 @@
     // =====================
     document.getElementById('registerToLoginBtn').onclick = () => showSection('login');
     document.getElementById('registerForm').onsubmit = async function(e) {
+      console.log('Register form submitted');
       e.preventDefault();
       const email = document.getElementById('registerEmail').value.trim();
       const password = document.getElementById('registerPassword').value;
@@ -362,23 +363,20 @@
       if (!email || !password) {
         errorDiv.textContent = 'Email and password required.';
         errorDiv.style.display = '';
-        return;
+        return false;
       }
       try {
         await apiFetch('/auth/register', {
           method: 'POST',
           body: JSON.stringify({ email, password })
         });
-        // Auto-login after register
         const loginRes = await apiFetch('/auth/login', {
           method: 'POST',
           body: JSON.stringify({ email, password })
         });
-        // Accept token or access_token
         const token = loginRes.token || loginRes.access_token;
         if (!token) throw new Error('No token returned from server.');
         saveToken(token);
-        // Clear fields
         document.getElementById('registerEmail').value = '';
         document.getElementById('registerPassword').value = '';
         await loadDocuments();
@@ -388,6 +386,7 @@
         errorDiv.textContent = err.message;
         errorDiv.style.display = '';
       }
+      return false;
     };
 
     // =====================
@@ -395,6 +394,7 @@
     // =====================
     document.getElementById('loginToRegisterBtn').onclick = () => showSection('register');
     document.getElementById('loginForm').onsubmit = async function(e) {
+      console.log('Login form submitted');
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
@@ -403,18 +403,16 @@
       if (!email || !password) {
         errorDiv.textContent = 'Email and password required.';
         errorDiv.style.display = '';
-        return;
+        return false;
       }
       try {
         const res = await apiFetch('/auth/login', {
           method: 'POST',
           body: JSON.stringify({ email, password })
         });
-        // Accept token or access_token
         const token = res.token || res.access_token;
         if (!token) throw new Error('No token returned from server.');
         saveToken(token);
-        // Clear fields
         document.getElementById('loginEmail').value = '';
         document.getElementById('loginPassword').value = '';
         await loadDocuments();
@@ -424,6 +422,7 @@
         errorDiv.textContent = err.message;
         errorDiv.style.display = '';
       }
+      return false;
     };
 
     // =====================
