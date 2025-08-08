@@ -374,9 +374,16 @@
           method: 'POST',
           body: JSON.stringify({ email, password })
         });
-        saveToken(loginRes.token);
+        // Accept token or access_token
+        const token = loginRes.token || loginRes.access_token;
+        if (!token) throw new Error('No token returned from server.');
+        saveToken(token);
+        // Clear fields
+        document.getElementById('registerEmail').value = '';
+        document.getElementById('registerPassword').value = '';
         await loadDocuments();
         showSection('upload');
+        setTimeout(() => sections.upload.scrollIntoView({behavior:'smooth'}), 100);
       } catch (err) {
         errorDiv.textContent = err.message;
         errorDiv.style.display = '';
@@ -403,9 +410,16 @@
           method: 'POST',
           body: JSON.stringify({ email, password })
         });
-        saveToken(res.token);
+        // Accept token or access_token
+        const token = res.token || res.access_token;
+        if (!token) throw new Error('No token returned from server.');
+        saveToken(token);
+        // Clear fields
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
         await loadDocuments();
         showSection('upload');
+        setTimeout(() => sections.upload.scrollIntoView({behavior:'smooth'}), 100);
       } catch (err) {
         errorDiv.textContent = err.message;
         errorDiv.style.display = '';
